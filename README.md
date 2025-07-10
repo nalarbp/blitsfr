@@ -1,5 +1,5 @@
 # BLITSFR
-BLITSFR () is a Nextflow pipeline that ..
+BLITSFR (BLAST Interactive Tracks in Single-File Report) is a Nextflow pipeline that compare the similarity of multiple sequences using BLAST and generate a single-file interactive report.
 
 ## Example report
 Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr)

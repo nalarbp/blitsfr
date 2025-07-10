@@ -1,4 +1,4 @@
-name: blitsfr_test
+name: blitsfr
 channels:
   - conda-forge
   - bioconda/noarch
