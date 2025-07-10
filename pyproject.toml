@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blitsfr"
+version = "0.1.0"
+description = "BLAST Interactive Tracks in Single-File Report"
+authors = [{name = "Budi Permana", email = "nalar.bp@gmail.com"}]
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "orjson",
+    "psutil",
+    "biopython>=1.85",
+    "pandas>=2.2.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/nalarbp/blitsfr"
+Repository = "https://github.com/nalarbp/blitsfr"
+
+[project.scripts]
+blitsfr = "blitsfr:main"
+
+[tool.setuptools]
+py-modules = ["blitsfr"]
