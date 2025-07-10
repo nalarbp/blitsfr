@@ -5,7 +5,6 @@ BLITSFR () is a Nextflow pipeline that ..
 Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr)
 
 ## Features
-- **Yaya**: Bla bla
 
 ## Installation
 
@@ -37,7 +36,7 @@ This repository contains input file examples located in [sample/](sample/) direc
 
 ```bash
 ls sample/ #to see example of required input files
-blitsfr assemblies ..
+blitsfr assemblies -r sample/Reference.gbff -q 'sample/*.fna'
 ```
 
 ### Required parameters
@@ -47,21 +46,6 @@ blitsfr assemblies ..
 
 
 ### Examples
-
-#### Assemblies
-```bash
-blitsfr assemblies
-```
-
-#### Reads
-```bash
-blitsfr reads
-```
-
-#### Resume previous run
-```bash
-blitsfr -r './sample/kraken2/*.txt' -t kraken2 -d gtdb -o kraken2_results --resume
-```
 
 ## Input file formats
 
