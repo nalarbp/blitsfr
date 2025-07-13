@@ -1,0 +1,6 @@
+work/
+*.nextflow*
+.DS_Store
+results/
+timeline.html
+trace.txt

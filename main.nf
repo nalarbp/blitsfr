@@ -85,7 +85,11 @@ workflow {
         ref_db_files = MAKE_BLASTDB(ref_files.ref_fna).blast_db_files.collect()
 
         ch_query = Channel
-            .fromPath("${params.queries_fasta}", checkIfExists: true)
+            .fromPath(
+                params.queries_fasta.contains(',') ? 
+                params.queries_fasta.split(',').collect { it.trim().replaceAll('"', '') } : 
+                params.queries_fasta.trim().replaceAll('"', ''), 
+            checkIfExists: true)
             .map { file -> return tuple(file.baseName, file) }
             .combine(ref_db_files)
 

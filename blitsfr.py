@@ -6,7 +6,24 @@ import sys
 import glob
 from pathlib import Path
 
-
+def transform_inputs_for_nextflow(inputs):
+    #multiple input files, comma-separated 
+    if ',' in inputs:
+        files = [f.strip().strip('"\'') for f in inputs.split(',')]
+        expanded_files = []
+        for f in files:
+            if '*' in f or '?' in f or '[' in f:
+                matches = glob.glob(f)
+                expanded_files.extend(matches)
+            else:
+                expanded_files.append(f)
+        
+        #return comma-separated
+        return ','.join(expanded_files)
+    #else as is (single or glob)
+    else:
+        return inputs
+    
 def run_blitsfr_pipeline(version, reference, method, queries, metadata, output, 
                          title, cpu_per_task, 
                          resume, config, nf_args, **method_params):
@@ -15,39 +32,34 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
 
     #determine method-specific parameters
     if method == 'blast':
-        queries_fasta = queries
+        queries_fasta = transform_inputs_for_nextflow(queries)
         queries_fastq = "false"
-        
-        #handle wildcard in queries
-        if '*' in queries_fasta:
-            query_files = glob.glob(queries_fasta)
-            if not query_files:
-                sys.exit(f"Error: No assembly files found matching {queries_fasta}")
-        elif not os.path.exists(queries_fasta):
-            sys.exit(f"Error: Assembly path {queries_fasta} does not exist.")
     else:  # method == 'kma'
         queries_fasta = "false"
-        queries_fastq = queries
+        queries_fastq = queries 
         
         #validate KMA reads mode
         kma_reads_mode = method_params.get('reads_mode', 'paired')
         if kma_reads_mode not in ['single', 'paired']:
             sys.exit(f"Error: KMA reads mode must be either 'single' or 'paired', got {kma_reads_mode}")
         
+        #handle single-end reads
+        if kma_reads_mode == 'single':
+            queries_fastq = transform_inputs_for_nextflow(queries_fastq)
+            
         #handle missing paired
         if kma_reads_mode == 'paired' and '{1,2}' not in queries_fastq and 'R{1,2}' not in queries_fastq:
                 sys.exit(f"Error: Paired-end mode requires paired files. Use pattern '*_R{{1,2}}*.gz' to capture both files.")
-        
-        #handle wildcard in queries
-        if '*' in queries_fastq:
-            if kma_reads_mode == 'paired' and '{1,2}' not in queries_fastq and 'R{1,2}' not in queries_fastq:
-                sys.exit(f"Error: Paired-end mode requires a pattern like '*_R{{1,2}}*.gz' to capture both files.")
-                
-            query_files = glob.glob(queries_fastq.replace('{1,2}', '1'))  # Just check for _1 files as test
-            if not query_files and '{1,2}' in queries_fastq:
-                sys.exit(f"Error: No read files found matching {queries_fastq}")
-        elif not os.path.exists(queries_fastq):
-            sys.exit(f"Error: Reads path {queries_fastq} does not exist.")
+                #handle wildcard in queries
+                if '*' in queries_fastq:
+                    if kma_reads_mode == 'paired' and '{1,2}' not in queries_fastq and 'R{1,2}' not in queries_fastq:
+                        sys.exit(f"Error: Paired-end mode requires a pattern like '*_R{{1,2}}*.gz' to capture both files.")
+                        
+                    query_files = glob.glob(queries_fastq.replace('{1,2}', '1'))  # Just check for _1 files as test
+                    if not query_files and '{1,2}' in queries_fastq:
+                        sys.exit(f"Error: No read files found matching {queries_fastq}")
+                elif not os.path.exists(queries_fastq):
+                    sys.exit(f"Error: Reads path {queries_fastq} does not exist.")
 
     if metadata != "false" and not os.path.exists(metadata):
         sys.exit(f"Error: Metadata file {metadata} does not exist.")
@@ -137,7 +149,6 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
         sys.exit(1)
 
 def setup_common_arguments(parser):
-    """Add arguments common to all subcommands."""
     parser.add_argument("-r", "--reference", required=True, 
                         help="Reference sequence file in GenBank format")
     parser.add_argument("-m", "--metadata", default="false", 
@@ -164,6 +175,10 @@ def main():
         epilog="BLITSFR: BLAST Interactive Tracks in a Single File Report. By Budi Permana (nalar.bp@gmail.com)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    
+    #version
+    version = '0.1.1'
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {version}")
     
     #subparsers for modes
     subparsers = parser.add_subparsers(dest="command", help="Analysis type to perform")
@@ -242,7 +257,6 @@ def main():
         sys.exit(f"Unknown command: {args.command}")
     
     #run the nextflow pipeline with the appropriate parameters
-    version = '0.1.0'
     run_blitsfr_pipeline(
         version=version,
         method=method,
