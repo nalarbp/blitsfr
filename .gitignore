@@ -4,3 +4,4 @@ work/
 results/
 timeline.html
 trace.txt
+__pycache__
