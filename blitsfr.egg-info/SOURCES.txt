@@ -1,0 +1,10 @@
+LICENSE
+README.md
+blitsfr.py
+pyproject.toml
+blitsfr.egg-info/PKG-INFO
+blitsfr.egg-info/SOURCES.txt
+blitsfr.egg-info/dependency_links.txt
+blitsfr.egg-info/entry_points.txt
+blitsfr.egg-info/requires.txt
+blitsfr.egg-info/top_level.txt

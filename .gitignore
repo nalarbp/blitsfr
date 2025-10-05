@@ -5,3 +5,4 @@ results/
 timeline.html
 trace.txt
 __pycache__
+test_dir/
