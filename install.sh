@@ -178,12 +178,12 @@ install_blitsfr() {
     if blitsfr -h >/dev/null 2>&1; then
         print_success "BLITSFR installed successfully!"
         echo
+        print_status "Installation directory: $INSTALL_DIR"
+        echo
         print_status "To use BLITSFR:"
         echo "  1. Activate the environment: conda activate blitsfr"
         echo "  2. Run blitsfr: blitsfr -h"
-        echo "  3. Try with sample data: blitsfr assemblies -r sample/Reference.gbff -q 'sample/*.fna'"
-        echo
-        print_status "Installation directory: $INSTALL_DIR"
+        echo "  3. Try with sample data: blitsfr assemblies -r $INSTALL_DIR/sample/Reference.gbff -q '$INSTALL_DIR/sample/*.fna'"
     else
         print_error "Installation test failed"
         exit 1
