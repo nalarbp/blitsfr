@@ -24,7 +24,7 @@ Dynamic: license-file
 BLITSFR (BLAST Interactive Tracks in Single-File Report) is a Nextflow pipeline that compares the similarity of multiple sequences using BLAST or KMA and generates a single-file interactive report with circular genome visualisation.
 
 ## Example report
-Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr)
+Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr) or [https://nalarbp.github.io/blitsfr](https://nalarbp.github.io/blitsfr)
 
 ## Features
 - **Interactive visualisation**: Circular genome plots with CGView
@@ -35,6 +35,10 @@ Try and download example of interactive BLITSFR report file from [https://scifr.
 
 ## Installation
 
+### Prerequisites
+- Conda or Mamba ([install here](https://conda-forge.org/download/))
+- Git ([install here](https://git-scm.com/downloads))
+
 ### Quick Install (Recommended)
 **One-line installation** - copy and paste this command:
 
@@ -42,23 +46,11 @@ Try and download example of interactive BLITSFR report file from [https://scifr.
 curl -fsSL https://raw.githubusercontent.com/nalarbp/blitsfr/main/install.sh | bash
 ```
 
-This script will automatically:
-- Detect your platform (Linux/macOS)
-- Check prerequisites (conda/mamba, git)
-- Clone the repository
-- Create the conda environment with all dependencies
-- Install BLITSFR in development mode
-- Test the installation
-
 After installation:
 ```bash
 conda activate blitsfr
 blitsfr -h  # Test the installation
 ```
-
-### Prerequisites
-- Conda or Mamba ([install here](https://conda-forge.org/download/))
-- Git ([install here](https://git-scm.com/downloads))
 
 ### Manual Installation (Alternative)
 
@@ -73,11 +65,11 @@ cd blitsfr
 
 2. Create and activate the conda environment:
 ```bash
-# Use platform-specific environment if available, or fallback to generic
-mamba env create -f environment-linux-64.yml  # For Linux
-# mamba env create -f environment-osx-64.yml     # For macOS Intel
-# mamba env create -f environment-osx-arm64.yml  # For macOS Apple Silicon
-# mamba env create -f environment.yml            # Generic fallback
+# Option 1: Use conda-lock (recommended)
+conda-lock install -n blitsfr conda-lock.yml
+
+# Option 2: Use generic environment file (fallback)
+# mamba env create -f environment.yml
 
 mamba activate blitsfr
 ```
@@ -95,7 +87,7 @@ blitsfr -h  # Confirm installation
 1. Navigate to your BLITSFR directory and activate the environment:
 ```bash
 cd blitsfr  # or wherever you installed BLITSFR
-conda activate blitsfr
+mamba activate blitsfr
 ```
 
 2. Pull the latest changes and update:
@@ -225,7 +217,9 @@ results/
 If you use BLITSFR in your research, please cite:
 
 ```
-[Coming soon]
+Interactive data analysis and reporting with SCIFR: A Single-File SPA Approach
+Budi Permana, Thom P. Cuddihy, Brian M. Forde
+bioRxiv 2025.07.10.664259; doi: https://doi.org/10.1101/2025.07.10.664259 
 ```
 
 ## License
@@ -241,8 +235,6 @@ This project is licensed under the Apache 2.0 - see the [LICENSE](LICENSE) for d
 ## Acknowledgements
 - CGViewer.js
 - Nextflow devs and community
-- Kraken2, Bracken, and MetaPhlAn4 authors 
-- NCBI and GTDB teams
 - ReactJS devs and community 
 - Core JS libraries (Jotai.js, Nivo.js, AgGrid.js, D3.js) devs and community
 
