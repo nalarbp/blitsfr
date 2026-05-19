@@ -22,6 +22,8 @@ dependencies = [
     "psutil",
     "biopython>=1.85",
     "pandas>=2.2.4",
+    "numpy",
+    "hdbscan",
 ]
 
 [project.urls]

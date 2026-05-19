@@ -17,6 +17,8 @@ params.kma_reads_mode = null
 params.kma_args = ''
 params.kma_min_reads = null
 params.kma_max_reads = null
+params.precluster_queries = false
+params.precluster_queries_args = ''
 params.max_parallel_jobs = Math.max(1, ((Runtime.getRuntime().availableProcessors() - 1) / params.cpu_per_task).intValue())
 params.cgview_title = null
 params.pipeline_version = null
@@ -27,6 +29,7 @@ params.cpu_per_task = 2
 //Const
 def BLAST_FORMAT = 'qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen qcovs qcovhsp sstrand slen'
 def MIN_REQUIRED_CPUS = params.cpu_per_task + 1
+def PRECLUSTER_ENABLED = params.precluster_queries in [true, 'true']
 
 //Resource validation
 if (params.executor == "local" && Runtime.getRuntime().availableProcessors() < MIN_REQUIRED_CPUS) {
@@ -65,6 +68,10 @@ if (params.method == 'kma') {
     }
 }
 
+if (PRECLUSTER_ENABLED && params.method != 'blast') {
+    error("ERROR: precluster_queries is currently only supported for BLAST assemblies mode!")
+}
+
 if (params.queries_fasta == null && params.queries_fastq == null) {
     error("ERROR: Either 'queries_fasta' or 'queries_fastq' must be specified!")
 }
@@ -84,18 +91,26 @@ workflow {
         //BLAST workflow
         ref_db_files = MAKE_BLASTDB(ref_files.ref_fna).blast_db_files.collect()
 
-        ch_query = Channel
+        ch_query_files = Channel
             .fromPath(
                 params.queries_fasta.contains(',') ? 
                 params.queries_fasta.split(',').collect { it.trim().replaceAll('"', '') } : 
                 params.queries_fasta.trim().replaceAll('"', ''), 
             checkIfExists: true)
             .map { file -> return tuple(file.baseName, file) }
-            .combine(ref_db_files)
+
+        ch_query = ch_query_files.combine(ref_db_files)
 
         blast_results = RUN_BLAST(ch_query).blast_out
         all_blast_results = blast_results.collect()
         compiled_results = COMPILE_BLAST_RESULTS(all_blast_results)
+
+        if (PRECLUSTER_ENABLED) {
+            PRECLUSTER_QUERIES(
+                ch_query_files.map { query_name, query_fasta -> query_fasta }.collect(),
+                ref_files.ref_fna,
+            )
+        }
 
         ch_meta = params.tracks_metadata == "false"
             ? Channel.of([])
@@ -353,6 +368,37 @@ process COMPILE_BLAST_RESULTS {
 
     # Process BLAST results to calculate coverage metrics
     processBLASTresults.py compiled_results.tsv blast_coverage.tsv
+    """
+}
+
+process PRECLUSTER_QUERIES {
+    publishDir "${params.results_directory}/2b_precluster_queries", mode: 'copy'
+
+    input:
+    path query_fastas
+    path ref_fna
+
+    output:
+    path "query_features.tsv", emit: query_features
+    path "clusters.tsv", emit: clusters
+    path "representatives.tsv", emit: representatives
+    path "cluster_manifest.tsv", emit: cluster_manifest
+    path "non_aligning_queries.tsv", emit: non_aligning_queries
+    path "hdbscan_tree.tsv", emit: hdbscan_tree
+
+    script:
+    def query_list = query_fastas.collect { it.getName() }.join('\n')
+    def precluster_args = params.precluster_queries_args ? "--skani-args ${params.precluster_queries_args}" : ''
+    """
+    cat <<'EOF' > query_paths.txt
+${query_list}
+EOF
+
+    preclusterQueries.py \\
+        --reference ${ref_fna} \\
+        --query-list query_paths.txt \\
+        --threads ${params.cpu_per_task} \\
+        ${precluster_args}
     """
 }
 

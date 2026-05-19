@@ -25,7 +25,8 @@ def transform_inputs_for_nextflow(inputs):
         return inputs
     
 def run_blitsfr_pipeline(version, reference, method, queries, metadata, output, 
-                         title, cpu_per_task, 
+                         title, cpu_per_task,
+                         precluster_queries, precluster_queries_args,
                          resume, config, nf_args, **method_params):
     if not os.path.exists(reference):
         sys.exit(f"Error: Reference file {reference} does not exist.")
@@ -64,6 +65,9 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
     if metadata != "false" and not os.path.exists(metadata):
         sys.exit(f"Error: Metadata file {metadata} does not exist.")
 
+    if precluster_queries and method != 'blast':
+        sys.exit("Error: --precluster_queries is currently only supported for assemblies mode.")
+
     #find the main.nf script
     script_path = os.path.realpath(os.path.abspath(__file__))
     script_dir = os.path.dirname(script_path)
@@ -100,11 +104,14 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
         nextflow_cmd.append(f"--blast_filter_min_identity={method_params.get('blast_filter_min_identity', 80)}")
         nextflow_cmd.append(f"--blast_filter_min_coverage={method_params.get('blast_filter_min_coverage', 0)}")
         nextflow_cmd.append(f"--blast_filter_min_alignment={method_params.get('blast_filter_min_alignment', 200)}")
+        nextflow_cmd.append(f"--precluster_queries={'true' if precluster_queries else 'false'}")
         
         #add BLAST-specific parameters
         blast_args = method_params.get('blast_args', '')
         if blast_args:
             nextflow_cmd.append(f"--blast_args='{blast_args}'")
+        if precluster_queries_args:
+            nextflow_cmd.append(f"--precluster_queries_args='{precluster_queries_args}'")
     else:  #method == 'kma'
         nextflow_cmd.append(f"--queries_fastq={queries_fastq}")
         nextflow_cmd.append("--queries_fasta=false")
@@ -199,6 +206,10 @@ def main():
                         help="Minimum coverage percentage (alignment_length / subject_length) * 100) for FILTERING step on BLAST results for CGView")
     blast_parser.add_argument("--blast-filter-min-alignment", type=float, default=200, 
                         help="Minimum alignment length (in bp) for FILTERING step on BLAST results for CGView")
+    blast_parser.add_argument("--precluster_queries", action="store_true",
+                            help="Enable skani-based preclustering of assembly queries before report decomposition")
+    blast_parser.add_argument("--precluster_queries_args", default="",
+                            help="Additional arguments to pass to skani during query preclustering (as a quoted string)")
     
     setup_common_arguments(blast_parser)
     
@@ -230,6 +241,8 @@ def main():
         'output': args.output,
         'title': args.title,
         'cpu_per_task': args.cpu_per_task,
+        'precluster_queries': getattr(args, 'precluster_queries', False),
+        'precluster_queries_args': getattr(args, 'precluster_queries_args', ''),
         'resume': args.resume,
         'config': args.config,
         'nf_args': args.nf_args,
