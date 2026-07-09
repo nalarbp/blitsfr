@@ -65,8 +65,13 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
     if metadata != "false" and not os.path.exists(metadata):
         sys.exit(f"Error: Metadata file {metadata} does not exist.")
 
-    if precluster_queries and method != 'blast':
-        sys.exit("Error: --precluster_queries is currently only supported for assemblies mode.")
+    if precluster_queries:
+        print(
+            "Warning: --precluster_queries is under development and is currently disabled internally. Proceeding with preclustering turned off.",
+            file=sys.stderr,
+        )
+        precluster_queries = False
+        precluster_queries_args = ""
 
     #find the main.nf script
     script_path = os.path.realpath(os.path.abspath(__file__))
@@ -184,7 +189,7 @@ def main():
     )
     
     #version
-    version = '0.1.1'
+    version = '0.1.2'
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {version}")
     
     #subparsers for modes
@@ -207,9 +212,9 @@ def main():
     blast_parser.add_argument("--blast-filter-min-alignment", type=float, default=200, 
                         help="Minimum alignment length (in bp) for FILTERING step on BLAST results for CGView")
     blast_parser.add_argument("--precluster_queries", action="store_true",
-                            help="Enable skani-based preclustering of assembly queries before report decomposition")
+                            help="Under development. Intended to enable skani-based preclustering of assembly queries before report decomposition. Currently disabled internally and defaults to false.")
     blast_parser.add_argument("--precluster_queries_args", default="",
-                            help="Additional arguments to pass to skani during query preclustering (as a quoted string)")
+                            help="Under development. Additional arguments for query preclustering. Currently ignored because preclustering is disabled internally.")
     
     setup_common_arguments(blast_parser)
     

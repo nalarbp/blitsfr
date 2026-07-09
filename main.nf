@@ -106,21 +106,16 @@ workflow {
         compiled_results = COMPILE_BLAST_RESULTS(all_blast_results)
 
         if (PRECLUSTER_ENABLED) {
-            PRECLUSTER_QUERIES(
+            precluster_output = PRECLUSTER_QUERIES(
                 ch_query_files.map { query_name, query_fasta -> query_fasta }.collect(),
                 ref_files.ref_fna,
+                compiled_results.compiled_results,
             )
         }
 
         ch_meta = params.tracks_metadata == "false"
             ? Channel.of([])
             : Channel.fromPath(params.tracks_metadata, checkIfExists: true)
-
-        cgview_json = BUILD_CGVIEW_JSON_BLAST(
-            compiled_results.compiled_results,
-            ref_files.ref_fna,
-            ref_files.ref_features,
-        )
 
         ch_coverage = compiled_results.blast_coverage
     } else {
@@ -175,12 +170,36 @@ workflow {
     }
 
     template_file = file("${baseDir}/bin/blitsfr_template.html")
-    scifr_output = GENERATE_SCIFR_REPORT(
-        cgview_json,
-        ch_meta,
-        ch_coverage,
-        template_file,
-    )
+
+    if (PRECLUSTER_ENABLED && params.method == 'blast') {
+        scifr_output = GENERATE_PRECLUSTER_REPORTS(
+            compiled_results.compiled_results,
+            compiled_results.blast_coverage,
+            precluster_output.clusters,
+            precluster_output.representatives,
+            precluster_output.cluster_manifest,
+            precluster_output.non_aligning_queries,
+            ref_files.ref_fna,
+            ref_files.ref_features,
+            ch_meta,
+            template_file,
+        )
+    } else {
+        cgview_json = params.method == 'blast'
+            ? BUILD_CGVIEW_JSON_BLAST(
+                compiled_results.compiled_results,
+                ref_files.ref_fna,
+                ref_files.ref_features,
+            )
+            : cgview_json
+
+        scifr_output = GENERATE_SCIFR_REPORT(
+            cgview_json,
+            ch_meta,
+            ch_coverage,
+            template_file,
+        )
+    }
 
     VALIDATE_REPORT(scifr_output.scifr_report)
 }
@@ -350,7 +369,7 @@ process RUN_KMA_PAIRED {
 }
 
 process COMPILE_BLAST_RESULTS {
-    publishDir "${params.results_directory}/3_results", mode: 'copy'
+    publishDir "${params.results_directory}/${PRECLUSTER_ENABLED ? '2c_compiled_blast' : '3_results'}", mode: 'copy'
 
     input:
     path blastout_files
@@ -362,12 +381,13 @@ process COMPILE_BLAST_RESULTS {
     script:
     def headers = "query_file\t" + BLAST_FORMAT.trim().replaceAll("\\s+", "\t")
     """
+    # compile blast outputs into one table
     # Create unsorted compilation
     echo -e "${headers}" > compiled_results.tsv
     cat ${blastout_files} >> compiled_results.tsv
 
-    # Process BLAST results to calculate coverage metrics
-    processBLASTresults.py compiled_results.tsv blast_coverage.tsv
+    # process blast results to calculate coverage metrics
+    processBLASTresults.py compiled_results.tsv blast_coverage.tsv -t ${params.cpu_per_task}
     """
 }
 
@@ -377,6 +397,7 @@ process PRECLUSTER_QUERIES {
     input:
     path query_fastas
     path ref_fna
+    path compiled_blast_results
 
     output:
     path "query_features.tsv", emit: query_features
@@ -394,7 +415,7 @@ process PRECLUSTER_QUERIES {
 ${query_list}
 EOF
 
-    preclusterQueries.py \\
+    python ${baseDir}/bin/preclusterQueries.py \\
         --reference ${ref_fna} \\
         --query-list query_paths.txt \\
         --threads ${params.cpu_per_task} \\
@@ -499,7 +520,6 @@ process GENERATE_SCIFR_REPORT {
     path template
 
     output:
-    path ("blitsfr.json"), optional: true, emit: scifr_input_json
     path ("blitsfr.html"), emit: scifr_report
 
     script:
@@ -518,6 +538,55 @@ process GENERATE_SCIFR_REPORT {
         -j "blitsfr.json" \
         -l params.json \
         -p "${params.pipeline_version}"
+    """
+}
+
+process GENERATE_PRECLUSTER_REPORTS {
+    publishDir "${params.results_directory}/3_results", mode: "copy"
+
+    input:
+    path compiled_results, name: "compiled_results.input.tsv"
+    path coverage_data, name: "blast_coverage.input.tsv"
+    path clusters
+    path representatives
+    path cluster_manifest
+    path non_aligning_queries
+    path ref_fasta
+    path gff_file
+    path metadata
+    path template
+
+    output:
+    path ("blitsfr.html"), emit: scifr_report
+    path ("cgview.json"), emit: cgview_json
+    path ("compiled_results.tsv"), emit: representative_compiled_results
+    path ("blast_coverage.tsv"), emit: representative_coverage
+    path ("report_manifest.tsv"), emit: report_manifest
+    path ("clusters"), optional: true, emit: cluster_reports
+    path ("non_aligning"), optional: true, emit: non_aligning_reports
+
+    script:
+    def metadata_param = metadata && metadata.name != '[]' ? "--metadata ${metadata}" : ""
+    def save_intermediate_param = params.save_intermediate_files ? "--save-intermediate" : ""
+    def gff_param = gff_file.name != 'NO_FILE' ? "--features ${gff_file}" : ''
+    """
+    echo '${groovy.json.JsonOutput.toJson(params)}' > params.json
+
+    python ${baseDir}/bin/generatePreclusterReports.py \\
+        --compiled-results ${compiled_results} \\
+        --coverage ${coverage_data} \\
+        --clusters ${clusters} \\
+        --representatives ${representatives} \\
+        --cluster-manifest ${cluster_manifest} \\
+        --non-aligning ${non_aligning_queries} \\
+        --reference ${ref_fasta} \\
+        ${gff_param} \\
+        ${metadata_param} \\
+        --template ${template} \\
+        --params-json params.json \\
+        --pipeline-version "${params.pipeline_version}" \\
+        --report-title "${params.cgview_title ?: 'CGViewMap'}" \\
+        ${save_intermediate_param}
     """
 }
 

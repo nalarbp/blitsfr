@@ -47,9 +47,10 @@ cd blitsfr
 conda-lock install -n blitsfr conda-lock.yml
 
 # Option 2: Use generic environment file (fallback)
-# mamba env create -f environment.yml
+mamba env create -f environment.yml
+# or: conda env create -f environment.yml
 
-mamba activate blitsfr
+conda activate blitsfr
 ```
 
 3. Install BLITSFR:
@@ -65,7 +66,7 @@ blitsfr -h  # Confirm installation
 1. Navigate to your BLITSFR directory and activate the environment:
 ```bash
 cd blitsfr  # or wherever you installed BLITSFR
-mamba activate blitsfr
+conda activate blitsfr
 ```
 
 2. Pull the latest changes and update:
@@ -218,4 +219,4 @@ This project is licensed under the Apache 2.0 - see the [LICENSE](LICENSE) for d
 
 ---
 
-**Version**: v0.1.1 
+**Version**: v0.1.2 

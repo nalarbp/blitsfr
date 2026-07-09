@@ -35,8 +35,12 @@ def calculate_coverage(blast_df, num_cores=1):
     groups = list(blast_df.groupby(['query_file', 'sseqid']))
     
     if num_cores > 1:
-        with ProcessPoolExecutor(max_workers=num_cores) as executor:
-            results = list(executor.map(process_group, groups))
+        try:
+            with ProcessPoolExecutor(max_workers=num_cores) as executor:
+                results = list(executor.map(process_group, groups))
+        except PermissionError:
+            # fall back to single-process mode when process pools are blocked
+            results = [process_group(group_data) for group_data in groups]
     else:
         results = [process_group(group_data) for group_data in groups]
     

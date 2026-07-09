@@ -1,8 +1,10 @@
 work/
 *.nextflow*
 .DS_Store
+*.egg-info/
+__pycache__/
+*.pyc
 results/
 timeline.html
 trace.txt
-__pycache__
 test_dir/

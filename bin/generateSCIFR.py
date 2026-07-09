@@ -85,9 +85,7 @@ def generate_scifr(cgview_json, metadata_json, coverage_json, template_path, out
                 outfile.write(json_bytes)
         
         # Step 3: Process template
-        start_marker = combined_data["startIdx"] 
-        end_marker = combined_data["endIdx"]
-        mutate_template_memory(combined_data, template_path, output_path, start_marker, end_marker)
+        mutate_template_memory(combined_data, template_path, output_path)
        
     except Exception as e:
         print(f"Error generating SCIFR: {str(e)}")

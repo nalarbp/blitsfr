@@ -70,20 +70,21 @@ install_blitsfr() {
         exit 1
     fi
 
-    # Check for conda/mamba
-    CONDA_CMD=""
+    # Check for conda and optional mamba
+    if ! command_exists conda; then
+        print_error "conda is required but not installed."
+        print_error "Please install conda first:"
+        print_error "  - Miniconda: https://docs.conda.io/en/latest/miniconda.html"
+        print_error "  - Miniforge: https://github.com/conda-forge/miniforge"
+        exit 1
+    fi
+
+    CONDA_CMD="conda"
     if command_exists mamba; then
         CONDA_CMD="mamba"
-        print_status "Found mamba"
-    elif command_exists conda; then
-        CONDA_CMD="conda"
-        print_status "Found conda"
+        print_status "Found mamba (will use it for environment solving)"
     else
-        print_error "Neither conda nor mamba found."
-        print_error "Please install conda/mamba first:"
-        print_error "  - Miniconda: https://docs.conda.io/en/latest/miniconda.html"
-        print_error "  - Mambaforge: https://github.com/conda-forge/miniforge"
-        exit 1
+        print_status "Found conda"
     fi
 
     # Set installation directory
