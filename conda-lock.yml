@@ -13,9 +13,9 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 44d8a85628b069c5130a670aeee05aec684087de11f28810d43db2e594ed2b9d
-    osx-64: 24b6236b147ecaccc9b3de902621ce093a659ff66bfa85ac16f5105b5f68e9f0
-    osx-arm64: 9e5c2a7f8bdc6862c0285188e398d77022f7a46a6f2f47d5329b68d51ac61a37
+    linux-64: 72df6039c6fa821229e1507c23733dd1ea149733e585184ff777128f1999cb93
+    osx-64: 0cfdece74f8ddf03e9daf11ad716a94919ae47dae006d80b427483cb56c09d7f
+    osx-arm64: df686abf7a3b57d19521637f0e4f0bc74b72ffdb237297e880e6943dcbce5e09
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1886,6 +1886,18 @@ package:
     sha256: dff1058c76ec6b8759e41cefa2508162d00e4a5e6721aa68ec3fd10094e702dc
   category: main
   optional: false
+- name: libstdcxx-ng
+  version: 15.2.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libstdcxx: 15.2.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-ng-15.2.0-hdf11a46_19.conda
+  hash:
+    md5: e5ce228e579726c07255dbf90dc62101
+    sha256: 0672b6b6e1791c92e8eccad58081a99d614fcf82bca5841f9dfa3c3e658f83b9
+  category: main
+  optional: false
 - name: libtiff
   version: 4.7.2
   manager: conda
@@ -2166,45 +2178,45 @@ package:
   category: main
   optional: false
 - name: nextflow
-  version: 26.04.4
+  version: 24.10.0
   manager: conda
   platform: linux-64
   dependencies:
     coreutils: ''
     curl: ''
-    openjdk: '>=17,<=24'
-  url: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.4-h2a3209d_0.conda
+    openjdk: '>=11,<=21'
+  url: https://conda.anaconda.org/bioconda/noarch/nextflow-24.10.0-hdfd78af_0.tar.bz2
   hash:
-    md5: cc7fb4aef26ceaa9dd7cd63b63ab3dee
-    sha256: 63ade7aaa427ba4697d936bec9f015bfcc300791e7d68954f8d61c5ef5d2d423
+    md5: 8b4fb80367cfbf7779efd2346037fdcb
+    sha256: 2f871e135d5969b5a1e961339a26536742ac0f6fa10dd3c74fef89e8fd6d66f9
   category: main
   optional: false
 - name: nextflow
-  version: 26.04.4
+  version: 24.10.0
   manager: conda
   platform: osx-64
   dependencies:
     coreutils: ''
     curl: ''
-    openjdk: '>=17,<=24'
-  url: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.4-h2a3209d_0.conda
+    openjdk: '>=11,<=21'
+  url: https://conda.anaconda.org/bioconda/noarch/nextflow-24.10.0-hdfd78af_0.tar.bz2
   hash:
-    md5: cc7fb4aef26ceaa9dd7cd63b63ab3dee
-    sha256: 63ade7aaa427ba4697d936bec9f015bfcc300791e7d68954f8d61c5ef5d2d423
+    md5: 8b4fb80367cfbf7779efd2346037fdcb
+    sha256: 2f871e135d5969b5a1e961339a26536742ac0f6fa10dd3c74fef89e8fd6d66f9
   category: main
   optional: false
 - name: nextflow
-  version: 26.04.4
+  version: 24.10.0
   manager: conda
   platform: osx-arm64
   dependencies:
     coreutils: ''
     curl: ''
-    openjdk: '>=17,<=24'
-  url: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.4-h2a3209d_0.conda
+    openjdk: '>=11,<=21'
+  url: https://conda.anaconda.org/bioconda/noarch/nextflow-24.10.0-hdfd78af_0.tar.bz2
   hash:
-    md5: cc7fb4aef26ceaa9dd7cd63b63ab3dee
-    sha256: 63ade7aaa427ba4697d936bec9f015bfcc300791e7d68954f8d61c5ef5d2d423
+    md5: 8b4fb80367cfbf7779efd2346037fdcb
+    sha256: 2f871e135d5969b5a1e961339a26536742ac0f6fa10dd3c74fef89e8fd6d66f9
   category: main
   optional: false
 - name: numpy
@@ -2263,59 +2275,61 @@ package:
   category: main
   optional: false
 - name: openjdk
-  version: 23.0.2
+  version: 21.0.0
   manager: conda
   platform: linux-64
   dependencies:
-    __glibc: '>=2.17,<3.0.a0'
-    alsa-lib: '>=1.2.13,<1.3.0a0'
-    fontconfig: '>=2.15.0,<3.0a0'
+    alsa-lib: '>=1.2.10,<1.3.0.0a0'
+    fontconfig: '>=2.14.2,<3.0a0'
     fonts-conda-ecosystem: ''
     freetype: '>=2.12.1,<3.0a0'
-    giflib: '>=5.2.2,<5.3.0a0'
-    harfbuzz: '>=10.3.0'
-    lcms2: '>=2.17,<3.0a0'
+    giflib: '>=5.2.1,<5.3.0a0'
+    harfbuzz: '>=8.2.1'
+    lcms2: '>=2.15,<3.0a0'
     libcups: '>=2.3.3,<2.4.0a0'
-    libgcc: '>=13'
+    libgcc-ng: '>=12'
     libjpeg-turbo: '>=3.0.0,<4.0a0'
-    libpng: '>=1.6.47,<1.7.0a0'
-    libstdcxx: '>=13'
-    libzlib: '>=1.3.1,<2.0a0'
-    xorg-libx11: '>=1.8.11,<2.0a0'
-    xorg-libxext: '>=1.3.6,<2.0a0'
-    xorg-libxi: '>=1.8.2,<2.0a0'
-    xorg-libxrandr: '>=1.5.4,<2.0a0'
-    xorg-libxrender: '>=0.9.12,<0.10.0a0'
-    xorg-libxt: '>=1.3.1,<2.0a0'
-    xorg-libxtst: '>=1.2.5,<2.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/openjdk-23.0.2-h68779a4_1.conda
+    libpng: '>=1.6.39,<1.7.0a0'
+    libstdcxx-ng: '>=12'
+    libzlib: '>=1.2.13,<2.0.0a0'
+    xorg-libx11: '>=1.8.7,<2.0a0'
+    xorg-libxext: '>=1.3.4,<2.0a0'
+    xorg-libxi: ''
+    xorg-libxrender: '>=0.9.11,<0.10.0a0'
+    xorg-libxt: '>=1.3.0,<2.0a0'
+    xorg-libxtst: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/openjdk-21.0.0-haa376d0_0.conda
   hash:
-    md5: 64f73cc54c693c6be95518d6f186e657
-    sha256: b58613309978d6dbe779bc2e87d123b591ee0da2a9b139dced848ea4b5398585
+    md5: 6e0eee5ba66ac5a73734e9618b7601af
+    sha256: 49055e42e49003ca094ff9db962af928d669711053543744045d21ea865bac97
   category: main
   optional: false
 - name: openjdk
-  version: 23.0.2
+  version: 21.0.0
   manager: conda
   platform: osx-64
   dependencies:
-    libzlib: '>=1.3.1,<2.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/openjdk-23.0.2-h18c9476_2.conda
+    __osx: '>=10.9'
+    libcxx: '>=16.0.6'
+    libzlib: '>=1.2.13,<2.0.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/openjdk-21.0.0-hf4d7fad_0.conda
   hash:
-    md5: e8b746e8947c0dab5aeb7a26b8bce2ad
-    sha256: 00a2381baecf707b4cb6ed74c4d91ede955e8f6f859e7caba35aa11720af8dd6
+    md5: 6faffc7be088fc7c48bae602239a3564
+    sha256: d71c4a5ac399a7c5045c7765193d3fc105b60abbc651d0666723843b771e6048
   category: main
   optional: false
 - name: openjdk
-  version: 23.0.2
+  version: 21.0.0
   manager: conda
   platform: osx-arm64
   dependencies:
-    libzlib: '>=1.3.1,<2.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/openjdk-23.0.2-hfb9339a_2.conda
+    __osx: '>=10.9'
+    libcxx: '>=16.0.6'
+    libzlib: '>=1.2.13,<2.0.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/openjdk-21.0.0-hed44d8b_0.conda
   hash:
-    md5: 6e330bfe359f78e2313eaecf8ca1529c
-    sha256: f16143181808731b74e03b191a1d859cfb6dc7ed066f9d567808c438e9770f85
+    md5: b73fd7058be9883b0cf6e413b5d8f6de
+    sha256: 3cf667a5a21570d26118c45ad81dad38c82674c6e26aff7d7f80db4efcb8e609
   category: main
   optional: false
 - name: openssl
@@ -4240,22 +4254,6 @@ package:
   hash:
     md5: adba2e334082bb218db806d4c12277c9
     sha256: 495f99c8eacfa4ae2d8fed2a7f2105777af89acdc204df145d2bbbc380ac631b
-  category: main
-  optional: false
-- name: xorg-libxrandr
-  version: 1.5.5
-  manager: conda
-  platform: linux-64
-  dependencies:
-    __glibc: '>=2.17,<3.0.a0'
-    libgcc: '>=14'
-    xorg-libx11: '>=1.8.12,<2.0a0'
-    xorg-libxext: '>=1.3.6,<2.0a0'
-    xorg-libxrender: '>=0.9.12,<0.10.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxrandr-1.5.5-hb03c661_0.conda
-  hash:
-    md5: e192019153591938acf7322b6459d36e
-    sha256: 80ed047a5cb30632c3dc5804c7716131d767089f65877813d4ae855ee5c9d343
   category: main
   optional: false
 - name: xorg-libxrender
