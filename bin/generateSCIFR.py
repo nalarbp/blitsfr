@@ -1,9 +1,31 @@
 #!/usr/bin/env python
 import argparse
 import datetime
+from pathlib import Path
 import pandas as pd
 import orjson
 from scifrMutator import mutate_template_memory
+
+
+def trim_display_path(value):
+    trimmed = value.strip()
+    if "/" not in trimmed and "\\" not in trimmed:
+        return value
+    return f"../{Path(trimmed).name}"
+
+
+def sanitize_log_value(value):
+    if isinstance(value, dict):
+        return {key: sanitize_log_value(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [sanitize_log_value(item) for item in value]
+    if isinstance(value, str):
+        if "," in value:
+            parts = [part.strip() for part in value.split(",")]
+            if all("/" in part or "\\" in part for part in parts if part):
+                return ",".join(trim_display_path(part) for part in parts)
+        return trim_display_path(value)
+    return value
 
 def combine_data(cgview_json, metadata_tsv, coverage_tsv, log_json, pipeline_version):
     #cgview
@@ -52,9 +74,7 @@ def combine_data(cgview_json, metadata_tsv, coverage_tsv, log_json, pipeline_ver
         try:
             with open(log_json, 'r') as log_file:
                 log_data = orjson.loads(log_file.read())
-                for key, value in log_data.items():
-                    if isinstance(value, str):
-                        log_data[key] = value.replace(" ", "-")
+                log_data = sanitize_log_value(log_data)
                 
         except Exception as e:
             print(f"Warning: Could not read log file: {str(e)}")

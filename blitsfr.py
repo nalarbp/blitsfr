@@ -114,7 +114,7 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
         #add BLAST-specific parameters
         blast_args = method_params.get('blast_args', '')
         if blast_args:
-            nextflow_cmd.append(f"--blast_args='{blast_args}'")
+            nextflow_cmd.append(f"--blast_args={blast_args}")
         if precluster_queries_args:
             nextflow_cmd.append(f"--precluster_queries_args='{precluster_queries_args}'")
     else:  #method == 'kma'
@@ -203,7 +203,7 @@ def main():
                                         epilog="Example: blitsfr assemblies -r reference.gbk -q 'assemblies/*.fasta' -o results")
     blast_parser.add_argument("-q", "--queries", required=True,
                             help="Path to FASTA file(s) for assembly queries. Can be a single file or multiple files using pattern like 'dir/*.fna' (IMPORTANT!: must be given as a quoted string)")
-    blast_parser.add_argument("--blast-args", default="'-dust yes -evalue 1E-20'", 
+    blast_parser.add_argument("--blast-args", default="-dust no -evalue 1E-20", 
                             help="Additional arguments to pass to BLAST (as a quoted string)")
     blast_parser.add_argument("--blast-filter-min-identity", type=float, default=80, 
                         help="Minimum identity percentage for FILTERING step on BLAST results for CGView")

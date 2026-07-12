@@ -108,7 +108,7 @@ blitsfr reads --reads-mode paired -r reference.gbk -q 'reads/*_R{1,2}.fastq.gz'
 - `--nf-args`: Additional Nextflow arguments
 
 **Assembly mode options:**
-- `--blast-args`: Additional BLAST arguments (default: '-dust yes -evalue 1E-20')
+- `--blast-args`: Additional BLAST arguments (default: '-dust no -evalue 1E-20')
 - `--blast-filter-min-identity`: Minimum identity % for filtering (default: 80)
 - `--blast-filter-min-coverage`: Minimum coverage % for filtering (default: 0)
 - `--blast-filter-min-alignment`: Minimum alignment length in bp (default: 200)
