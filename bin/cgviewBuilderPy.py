@@ -509,7 +509,10 @@ def parse_blast_file(file_path: str) -> Tuple[Dict[str, List[Feature]], Dict[str
                 strand = -1  # "-"
                 start, end = end, start
                 
-            genome_name = pattern.sub('_', query_file)
+            # Keep the canonical query ID so report payloads and CGView tracks use the same key.
+            genome_name = query_file
+            # Previous sanitised track naming kept here for reference in case CGView-specific issues return.
+            # genome_name = pattern.sub('_', query_file)
             
             feature = Feature(
                 name="",
@@ -537,7 +540,9 @@ def parse_blast_file(file_path: str) -> Tuple[Dict[str, List[Feature]], Dict[str
     }
     
     for genome_name, features in features_by_query.items():
-        query_file = next((qfile for qfile in query_files if pattern.sub('_', qfile) == genome_name), None)
+        query_file = next((qfile for qfile in query_files if qfile == genome_name), None)
+        # Previous sanitised lookup kept here for reference.
+        # query_file = next((qfile for qfile in query_files if pattern.sub('_', qfile) == genome_name), None)
         if query_file:
             source = query_to_source[query_file]
             for feature in features:
