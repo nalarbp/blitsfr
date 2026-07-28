@@ -4,6 +4,7 @@ BLITSFR (BLAST Interactive Tracks in Single-File Report) is a Nextflow pipeline 
 ## Example report
 Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr) or [https://nalarbp.github.io/blitsfr](https://nalarbp.github.io/blitsfr)
 
+
 ## Features
 - **Interactive visualisation**: Circular genome plots with CGView
 - **Single-file output**: Self-contained HTML report with embedded data
@@ -13,12 +14,23 @@ Try and download example of interactive BLITSFR report file from [https://scifr.
 
 ## Installation
 
+### Supported platforms
+- macOS
+- Linux
+- Windows (via WSL2 only)
+
 ### Prerequisites
-- Conda or Mamba ([install here](https://conda-forge.org/download/))
+- Mamba (recommended) or Conda ([install here](https://conda-forge.org/download/))
 - Git ([install here](https://git-scm.com/downloads))
 
+`mamba` is preferred because it resolves environments faster than `conda`. `conda-lock` is recommended for reproducible installs, but not required.
+
+### Windows (via WSL2)
+- Use a Linux distribution in WSL2, such as Ubuntu.
+- Run all installation and `blitsfr` commands inside the WSL2 terminal.
+
 ### Quick Install (Recommended)
-**One-line installation** - copy and paste this command:
+This installer expects `git` and either `mamba` or `conda` to already be installed on your system.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nalarbp/blitsfr/main/install.sh | bash
@@ -27,10 +39,10 @@ curl -fsSL https://raw.githubusercontent.com/nalarbp/blitsfr/main/install.sh | b
 After installation:
 ```bash
 conda activate blitsfr
-blitsfr -h  # Test the installation
+blitsfr -h  # Confirm installation
 ```
 
-### Manual Installation (Alternative)
+### Manual Installation
 
 <details>
 <summary>Click to expand manual installation steps</summary>
@@ -41,14 +53,11 @@ git clone https://github.com/nalarbp/blitsfr.git
 cd blitsfr
 ```
 
-2. Create and activate the conda environment:
+2. Create and activate the environment:
 ```bash
-# Option 1: Use conda-lock (recommended)
 conda-lock install -n blitsfr conda-lock.yml
-
-# Option 2: Use generic environment file (fallback)
-mamba env create -f environment.yml
-# or: conda env create -f environment.yml
+# Fallback: mamba env create -f environment.yml
+# Fallback: conda env create -f environment.yml
 
 conda activate blitsfr
 ```
@@ -76,11 +85,22 @@ pip install -e . --force-reinstall
 ```
 
 ## Basic usage
-This repository contains input file examples located in [sample/](sample/) directory for you to try blitsfr. Run the following command:
+This repository contains example inputs in [sample/](sample/):
+- `sample/assemblies_mode/` for assembly-mode examples
+- `sample/reads_mode/` for read-mode examples
+
+Try assemblies mode:
 
 ```bash
-ls sample/ #to see example of required input files
-blitsfr assemblies -r sample/Reference.gbff -q 'sample/*.fna'
+ls sample/assemblies_mode/ #to see example input files for assemblies mode
+blitsfr assemblies -r sample/assemblies_mode/Reference.gbff -q 'sample/assemblies_mode/*.fna'
+```
+
+Try reads mode:
+
+```bash
+ls sample/reads_mode/ #to see example input files for reads mode
+blitsfr reads --reads-mode paired -r sample/reads_mode/Reference.gbff -q 'sample/reads_mode/*_R{1,2}.fastq.gz'
 ```
 
 ### Required parameters
@@ -94,7 +114,7 @@ blitsfr assemblies -r reference.gbk -q 'assemblies/*.fasta'
 ```
 **Read mode specific:**
 ```bash
-blitsfr reads --reads-mode paired -r reference.gbk -q 'reads/*_R{1,2}.fastq.gz'
+blitsfr reads --reads-mode paired -r sample/reads_mode/Reference.gbff -q 'sample/reads_mode/*_R{1,2}.fastq.gz'
 ```
 
 ### Optional parameters
@@ -104,8 +124,7 @@ blitsfr reads --reads-mode paired -r reference.gbk -q 'reads/*_R{1,2}.fastq.gz'
 - `--title`: Title for CGView visualisation (default: 'CGView Map')
 - `--cpu_per_task`: CPU cores per task (default: 2)
 - `--resume`: Resume previous Nextflow run
-- `-c, --config`: Nextflow configuration file
-- `--nf-args`: Additional Nextflow arguments
+- `--nf-args`: Additional Nextflow arguments passed to Nextflow, for example `--nf-args "-c custom.config -with-report report.html"`
 
 **Assembly mode options:**
 - `--blast-args`: Additional BLAST arguments (default: '-dust no -evalue 1E-20')
@@ -131,13 +150,22 @@ blitsfr assemblies -r reference.gbk -q 'genomes/*.fasta' \
 
 **With metadata:**
 ```bash
-blitsfr assemblies -r reference.gbk -q 'samples/*.fna' \
-  -m metadata_vre_st78.txt \
+blitsfr assemblies -r sample/assemblies_mode/Reference.gbff -q 'sample/assemblies_mode/*.fna' \
+  -m sample/assemblies_mode/metadata_vre_st78.txt \
   -o comparative_analysis
 ```
 
+**Reads mode with metadata:**
+```bash
+blitsfr reads --reads-mode paired \
+  -r sample/reads_mode/Reference.gbff \
+  -q 'sample/reads_mode/*_R{1,2}.fastq.gz' \
+  -m sample/reads_mode/metadata_vre_st78.txt \
+  -o read_mapping_results
+```
+
 ## Input file formats
-**Reference file**: GenBank format (.gbk, .gbff) containing the reference genome
+**Reference file**: GenBank format (.gbk, .gbff) must containing the sequence of reference genome
 
 **Query files**: 
 - Assembly mode: FASTA format (.fasta, .fna, .fa)
@@ -156,6 +184,10 @@ id	Geolocation2	Lineage_group	Assembly_acc	Strain
 **Important**: The 'id' column must match the basename of your query files. For example, if your assembly file is `2_QLD_GCA_022046545.1.fna`, the corresponding id should be `2_QLD_GCA_022046545.1`.
 
 ## Output structure
+
+The exact contents depend on whether you run `assemblies` or `reads`. The final validated reports are written to the output directory root. Nextflow working files are created in the directory where you launch `blitsfr`.
+
+### Assemblies mode
 
 ```
 results/
@@ -179,18 +211,54 @@ results/
 │   ├── blitsfr.html
 │   ├── cgview.json
 │   └── compiled_results.tsv
-├── work/                      #Nextflow working directory
-├── .nextflow/                 #Nextflow metadata
-├── .nextflow.log              #Nextflow execution log
 ├── blitsfr.result.html        #Final interactive report
 └── blitsfr.result.html.gz     #Compressed final report
 ```
 
-**Main output files:**
+### Reads mode
+
+```
+results/
+├── 1_reference/
+│   ├── kma_db/
+│   ├── ref_features.gff3
+│   └── ref.fna
+├── 2_kma/
+│   ├── sample1.res
+│   ├── sample1.mat.gz
+│   ├── sample2.res
+│   └── sample2.mat.gz
+├── 3_compiled_kma_results/
+│   ├── compiled_kma_res.tsv
+│   ├── compiled_kma_mat.tsv
+│   ├── compiled_kma_mat_norm_1.tsv
+│   ├── compiled_kma_mat_norm_2.tsv
+│   └── kma_coverage.tsv
+├── 3_results/
+│   ├── blitsfr.html
+│   └── cgview.json
+├── blitsfr.result.html
+└── blitsfr.result.html.gz
+```
+
+### Nextflow runtime files
+
+These are created in the directory where you run the command, not inside `results/`:
+
+```
+work/
+.nextflow/
+.nextflow.log
+timeline.html
+trace.txt
+```
+
+**Main output files**
 - `blitsfr.result.html`: Main interactive report with embedded visualisations
 - `blitsfr.result.html.gz`: Compressed version for sharing
-- `3_results/compiled_results.tsv`: Tab-separated summary of all results
 - `3_results/cgview.json`: CGView configuration and data for visualisation
+- `3_results/compiled_results.tsv`: Assembly-mode BLAST summary table
+- `3_compiled_kma_results/compiled_kma_res.tsv`: Read-mode KMA summary table
 
 ## Citation
 If you use BLITSFR in your research, please cite:
@@ -205,14 +273,14 @@ bioRxiv 2025.07.10.664259; doi: https://doi.org/10.1101/2025.07.10.664259
 This project is licensed under the Apache 2.0 - see the [LICENSE](LICENSE) for details.
 
 ## Documentation
-[TODO] Add more detailed documentation on [docs/](docs/) dir.
+Additional documentation and troubleshooting notes will be expanded in the repository wiki.
 
 ## Support
 - **Issues**: Report bugs and request features on [GitHub Issues](https://github.com/nalarbp/blitsfr/issues)
 - **Contact**: b.permana@uq.edu.au
 
 ## Acknowledgements
-- CGViewer.js
+- CGViewer.js, please cite: Grant, J.R. and P. Stothard, CGView.js: a JavaScript package for visualizing small genomes. Journal of Open Source Software, 2026. 11(122): p. 9930.
 - Nextflow devs and community
 - ReactJS devs and community 
 - Core JS libraries (Jotai.js, Nivo.js, AgGrid.js, D3.js) devs and community

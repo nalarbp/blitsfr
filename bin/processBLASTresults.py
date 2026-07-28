@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+Calculate subject (ref,) coverage for each query track.
+E.g. How many subject positions are covered by at least one alignment.
+
+Last checked by: BP
+"""
 import argparse
 import pandas as pd
 import numpy as np
@@ -6,6 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 import os
 
 def process_group(group_data):
+    """Calculate covered subject positions for each query-subject BLAST group."""
     query, subject = group_data[0]
     group = group_data[1]
     
@@ -31,6 +38,7 @@ def process_group(group_data):
     }
 
 def calculate_coverage(blast_df, num_cores=1):
+    """Calculate coverage for all query-subject groups and return the final table."""
     #group by query_file and subject id (ref can have multiple subjects/contigs)
     groups = list(blast_df.groupby(['query_file', 'sseqid']))
     
@@ -48,6 +56,7 @@ def calculate_coverage(blast_df, num_cores=1):
     return results_df
 
 def get_optimal_cores(threads_arg):
+    """Just to check if the requested threads fit the machine capacity."""
     available_cores = os.cpu_count() or 1
     
     if threads_arg == 'max':
@@ -59,6 +68,7 @@ def get_optimal_cores(threads_arg):
             return max(1, available_cores - 2)
 
 def main():
+    """Parse args and write the BLAST coverage summary table."""
     parser = argparse.ArgumentParser(description='Process BLAST results to calculate coverage metrics')
     parser.add_argument('input_file', help='Input BLAST results file (TSV format)')
     parser.add_argument('output_file', help='Output file for coverage metrics (TSV format)')

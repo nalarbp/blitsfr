@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+"""
+Build CGView-compatible JSON for BLITSFR reports.
+
+This is Python-based reimplementation of the map-building workflow used by CGView.js. 
+It prepares CGView-compatible JSON for the bundled viewer.
+
+Upstream project references:
+- CGView.js docs: https://js.cgview.ca/
+- CGView.js repository: https://github.com/sciguy/cgview-js
+
+Last checked by: BP
+"""
 import argparse
 import json
 import uuid
@@ -16,7 +28,9 @@ from pathlib import Path
 #Todo: to_dict has the highest memory and time usage (tried, keep it for this version, rebase for next milestone)
 
 def track_performance(func):
+    """Used for perf. eval, getting timing and memory logs."""
     def wrapper(*args, **kwargs):
+        # Large report builds can be memory-heavy, so keep lightweight timing telemetry here.
         process = psutil.Process(os.getpid())
         start_memory = process.memory_info().rss / 1024 / 1024  # MB
         start_time = time.time()
@@ -164,6 +178,7 @@ class Sequence:
     contigs: List[Contig] = field(default_factory=list)
     
     def add_contig(self, contig: Contig):
+        """Append a contig to sequence."""
         self.contigs.append(contig)
     
     def to_dict(self):
@@ -189,6 +204,8 @@ class Feature:
     meta: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        """Check and normalize feature coordinate order."""
+        # Normalize reversed coordinates so downstream rendering always sees start <= stop.
         if self.start > self.stop:
             self.start, self.stop = self.stop, self.start
         if self.strand not in ['+', '-', '.', 1, -1]:
@@ -209,6 +226,7 @@ class Plot:
     visible: bool = True
     
     def __post_init__(self):
+        """Validate plot array lengths and default the legend label."""
         if len(self.positions) != len(self.scores):
             raise ValueError("Number of positions must match number of scores")
         if not self.legend:
@@ -235,6 +253,7 @@ class Track:
 
 @dataclass
 class CGViewBuilder:
+    """Main CGView map instace."""
     name: str = 'CGViewMap'
     version: str = "1.5.1"
     settings: Settings = field(default_factory=Settings)
@@ -257,9 +276,11 @@ class CGViewBuilder:
         self.captions.name = self.name
 
     def set_sequence(self, sequence: Sequence):
+        """Add ref. sequence to the builder."""
         self.sequence = sequence
 
     def add_feature(self, feature: Feature):
+        """Add a feature to the buildert."""
         self.features.append(feature)
         if feature.source == "genbank-features" and feature.source not in self._feature_sources:
             self._feature_sources.add(feature.source)
@@ -275,6 +296,7 @@ class CGViewBuilder:
             self.tracks.append(track)
 
     def add_plot(self, plot: Plot):
+        """Add plot to the builder."""
         self.plots.append(plot)
         track = Track(
             name=plot.name,
@@ -287,10 +309,12 @@ class CGViewBuilder:
         self.tracks.append(track)
 
     def add_track(self, track: Track):
+        """Append track to the builder."""
         self.tracks.append(track)
 
     @track_performance
     def to_dict(self) -> dict:
+        """Make the final CGView.js compatible JSON payload."""
         result = {
             "cgview": {
                 "name": self.name,
@@ -318,6 +342,7 @@ class CGViewBuilder:
 
 @track_performance
 def parse_sequence_file(file_path: str) -> Sequence:
+    """Parse a FASTA file into a CGView sequence, works on one or more contigs."""
     try:
         with open(file_path, 'r') as f:
             lines = f.readlines()
@@ -360,6 +385,7 @@ def parse_sequence_file(file_path: str) -> Sequence:
         sys.exit(1)
         
 def parse_gff_attributes(attr_string: str, feature_id_attr: str = 'first') -> str:
+    """Extract feature attr. from a GFF ref"""
     attributes = {}
     for attr in attr_string.split(';'):
         if not attr.strip():
@@ -373,6 +399,7 @@ def parse_gff_attributes(attr_string: str, feature_id_attr: str = 'first') -> st
     return attributes.get(feature_id_attr, next(iter(attributes.values())) if attributes else '')
 
 def get_feature_color(feature_type: str) -> str:
+    """Get the default color for ref. feature type."""
     color_map = {
         'CDS': 'rgba(255,0,0,1)',
         'gene': 'rgba(0,255,0,1)',
@@ -385,11 +412,13 @@ def get_feature_color(feature_type: str) -> str:
     return color_map.get(feature_type, 'rgba(100,100,100,1)')
 
 def get_feature_decoration(feature_type: str) -> str:
+    """Get the legend decoration for feature type."""
     arrow_features = {'CDS', 'gene', 'tRNA', 'rRNA', 'ncRNA'}
     return 'arrow' if feature_type in arrow_features else 'arc'
 
 @track_performance
 def parse_feature_file(file_path: str, feature_types: set = None, feature_id_attr: str = 'first') -> tuple[List[Feature], List[LegendItem]]:
+    """Parse GFF features and build legend items."""
     features = []
     seen_feature_types = set()
     legend_items = []
@@ -448,6 +477,7 @@ def parse_feature_file(file_path: str, feature_types: set = None, feature_id_att
 
 @track_performance
 def parse_blast_file(file_path: str) -> Tuple[Dict[str, List[Feature]], Dict[str, str]]:
+    """Convert filtered BLAST rows into CGView feature tracks grouped by query."""
     pattern = re.compile(r'[^\w-]')
     features_by_query = defaultdict(list)
     query_files = set()
@@ -500,6 +530,7 @@ def parse_blast_file(file_path: str) -> Tuple[Dict[str, List[Feature]], Dict[str
             
             features_by_query[genome_name].append(feature)
     
+    # Preserve the original query identity before converting it into CGView track/source keys.
     query_to_source = {
         qfile: f"blast-{i+1}.1"
         for i, qfile in enumerate(sorted(query_files))
@@ -517,6 +548,7 @@ def parse_blast_file(file_path: str) -> Tuple[Dict[str, List[Feature]], Dict[str
 
 @track_performance
 def add_blast_tracks(builder: CGViewBuilder, blast_features: Dict[str, List[Feature]], query_to_source: Dict[str, str], colors: List[str] = None):
+    """Attach BLAST-derived features, tracks, and legend items to the builder."""
     if colors is None:
         colors = ["rgba(0,0,0,1)"]
     
@@ -550,6 +582,7 @@ def add_blast_tracks(builder: CGViewBuilder, blast_features: Dict[str, List[Feat
 
 @track_performance
 def parse_plot_file(file_path: str, sequence: Sequence = None) -> tuple[Dict[str, List[Plot]], Dict[str, str]]:
+    """Parse windowed coverage data into CGView plot objects grouped by sample."""
     plots_by_sample = {}
     sample_files = set()
     
@@ -579,6 +612,7 @@ def parse_plot_file(file_path: str, sequence: Sequence = None) -> tuple[Dict[str
                 sample_id = fields[sample_idx]
                 sample_files.add(sample_id)
             
+            # Keep sample IDs stable while assigning compact internal source names for tracks.
             sample_to_source = {
                 sample: f"plot-{i+1}" 
                 for i, sample in enumerate(sorted(sample_files))
@@ -624,6 +658,7 @@ def parse_plot_file(file_path: str, sequence: Sequence = None) -> tuple[Dict[str
                         start += offset
                         end += offset
                     else:
+                        # Fall back to local coordinates when plot templates do not match contig names.
                         print(f"Warning: Template '{template}' not found in sequence contigs. Using local coordinates.")
                 
                 if sample_id not in grouped_data:
@@ -649,6 +684,7 @@ def parse_plot_file(file_path: str, sequence: Sequence = None) -> tuple[Dict[str
                     plots_by_sample[sample_id] = []
                 
                 if sequence and len(contig_order) > 1:
+                    # Rebuild points in contig order and insert boundary markers to avoid cross-contig lines.
                     template_data = {}
                     for i, template in enumerate(data['templates']):
                         if template not in template_data:
@@ -766,6 +802,7 @@ def parse_plot_file(file_path: str, sequence: Sequence = None) -> tuple[Dict[str
 
 @track_performance
 def add_plot_tracks(builder: CGViewBuilder, plots_by_sample: Dict[str, List[Plot]], sample_to_source: Dict[str, str], colors: List[str] = None):
+    """Attach plot tracks and legend entries for each sample to the builder."""
     if colors is None:
         colors = ["rgba(0,0,255,1)", "rgba(255,0,0,1)", "rgba(0,128,0,1)", "rgba(128,0,128,1)"]
     
@@ -800,16 +837,15 @@ def add_plot_tracks(builder: CGViewBuilder, plots_by_sample: Dict[str, List[Plot
 
 @track_performance
 def main():
+    """Main entry, parse args, parse inputs, build a CGView JSON file."""
     parser = argparse.ArgumentParser(description='CGView Builder CLI')
     parser.add_argument('--name', default='CGViewMap', help='Name of the visualization')
     parser.add_argument('--sequence', required=True, help='Path to sequence file (FASTA format)')
     parser.add_argument('--features', help='Path to features file (GFF format)')
     parser.add_argument('--plots', help='Path to plots file (tab-delimited format with SampleID, Template, Window, Start, End, Value)')
     parser.add_argument('--output', default='CGView.json', help='Output JSON file path')
-    parser.add_argument('--feature-type', default='all', 
-                      help='Comma-separated list of feature types to include (default: all)')
-    parser.add_argument('--feature-id', default='first',
-                      help='Attribute to use as feature ID (default: first attribute)')
+    parser.add_argument('--feature-type', default='all', help='Comma-separated list of feature types to include (default: all)')
+    parser.add_argument('--feature-id', default='first', help='Attribute to use as feature ID (default: first attribute)')
     parser.add_argument('--blast', help='Path to BLAST TSV file')
     
     args = parser.parse_args()
@@ -846,6 +882,7 @@ def main():
         add_blast_tracks(builder, blast_features, query_to_source)
     
     print("\nGenerating output JSON...")
+    # Serialize only after all sequence, feature, and track layers are attached to the builder.
     output = builder.to_dict()
     output_path = Path(args.output)
     

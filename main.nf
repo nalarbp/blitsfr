@@ -276,15 +276,6 @@ process RUN_BLAST {
     def save_raw = params.save_intermediate_files ? '' : '&& rm ${query_name}.blast.out.raw'
     """
     # Run blast
-    # Bug alert: subject_besthit or max_hsps = 1, will choose the the best hit.
-    # What happend if contigs (query) is mapped to 2 different region in the subject
-    # With those pramas set true, it will just choose 1 (the best)
-    # Example is when looking at pUTI seq vs assembly when max_hsps =1 . somehow the replicon identitdied 
-    # by plasmidfinder has no hits displayed, its because the hit on replicon is from the node (contig)
-    # that has another hits, which better hits (longer aln, etc) to other region.
-    # Not setting max_hsps is gurantee to see all hits (but is this biologically relevant?),
-    # but the downside is it will make the compiled blast file huge (mitigate with eval).
-
     blastn \\
         -query ${query_fasta} \\
         -out ${query_name}.blast.out.raw \\

@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+Transform KMA matrix outputs into window-based coverage CGView plots.
+It compiles per-base KMA matrix files into per-window coverage values and summary coverage tables.
+
+Last checked by: BP
+"""
 import pandas as pd
 import glob
 import gzip
@@ -8,6 +14,7 @@ import argparse
 from typing import Dict, List, Tuple
 
 def parse_args():
+    """Parse arguments."""
     parser = argparse.ArgumentParser(description='Process KMA matrix files to create windowed coverage table')
     parser.add_argument('--kma_outputs', nargs='+', required=True, help='KMA matrix files (.mat.gz)')
     parser.add_argument('--res_file', required=True, help='Compiled KMA results file')
@@ -22,6 +29,7 @@ def parse_args():
     return parser.parse_args()
 
 def generate_kma_coverage(res_file: str) -> pd.DataFrame:
+    """Get total covered reference bases for each sample from the KMA results."""
     try:
         res_df = pd.read_csv(res_file, sep='\t')
         
@@ -44,6 +52,7 @@ def generate_kma_coverage(res_file: str) -> pd.DataFrame:
     
     
 def get_template_lengths_from_res(res_file: str) -> Dict[str, int]:
+    """Collect template (ref.) lengths from the compiled KMA results."""
     template_lengths = {}
     try:
         res_df = pd.read_csv(res_file, sep='\t')
@@ -59,6 +68,7 @@ def get_template_lengths_from_res(res_file: str) -> Dict[str, int]:
     return template_lengths
 
 def generate_windows(template_lengths: Dict[str, int], window_size: int) -> pd.DataFrame:
+    """Generate fixed-width windows across each template sequence."""
     result_data = []
     
     for template_id, length in template_lengths.items():
@@ -75,6 +85,7 @@ def generate_windows(template_lengths: Dict[str, int], window_size: int) -> pd.D
     return pd.DataFrame(result_data)
 
 def process_matrix_file(mat_file: str, window_size: int) -> Tuple[str, Dict[Tuple[str, str], float]]:
+    """Convert one KMA matrix file into average coverage values per defined template window."""
     sample_id = os.path.basename(mat_file).replace('.mat.gz', '')
     sample_coverage = {}
     
@@ -142,6 +153,7 @@ def process_matrix_file(mat_file: str, window_size: int) -> Tuple[str, Dict[Tupl
     return sample_id, sample_coverage
 
 def normalise_dataframe(df: pd.DataFrame, min_reads: float, max_reads: float) -> pd.DataFrame:
+    """Normalisation 1: clip per-window sample coverage values to the defined min/max reads range."""
     normalised_df = df.copy()
     
     #get the sample columns (no need Template, Window, Start, End)
@@ -153,6 +165,7 @@ def normalise_dataframe(df: pd.DataFrame, min_reads: float, max_reads: float) ->
     return normalised_df
 
 def normalise_to_range(df: pd.DataFrame, min_reads: float, max_reads: float) -> pd.DataFrame:
+    """Normalisation 2: scale windowed coverage values into a 0-1 long-format table for cgview.js plotting."""
     normalised_df = df.copy()
     sample_columns = [col for col in df.columns if col not in ['Template', 'Window', 'Start', 'End']]
     
@@ -183,6 +196,7 @@ def normalise_to_range(df: pd.DataFrame, min_reads: float, max_reads: float) -> 
     return long_df
 
 def main():
+    """Parse inputs, compile matrix windows, and write KMA output tables."""
     args = parse_args()
     window_size = args.window_size
     min_reads = args.min_reads

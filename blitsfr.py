@@ -1,12 +1,22 @@
 #!/usr/bin/env python
+"""
+BLITSFR command-line entrypoint.
+
+Parses user args, validates inputs, and pass it to Nextflow workflow 
+with the appropriate BLAST or KMA mode parameters.
+
+Last checked by: BP
+"""
 import argparse
 import os
 import subprocess
 import sys
 import glob
+import shlex
 from pathlib import Path
 
 def transform_inputs_for_nextflow(inputs):
+    """Expand comma-separated file/glob inputs into the form expected by Nextflow."""
     #multiple input files, comma-separated 
     if ',' in inputs:
         files = [f.strip().strip('"\'') for f in inputs.split(',')]
@@ -27,7 +37,8 @@ def transform_inputs_for_nextflow(inputs):
 def run_blitsfr_pipeline(version, reference, method, queries, metadata, output, 
                          title, cpu_per_task,
                          precluster_queries, precluster_queries_args,
-                         resume, config, nf_args, **method_params):
+                         resume, nf_args, **method_params):
+    """Check the CLI inputs, build the Nextflow command, and execute the pipeline."""
     if not os.path.exists(reference):
         sys.exit(f"Error: Reference file {reference} does not exist.")
 
@@ -67,7 +78,7 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
 
     if precluster_queries:
         print(
-            "Warning: --precluster_queries is under development and is currently disabled internally. Proceeding with preclustering turned off.",
+            "Warning: --precluster_queries is currently unavailable. Proceeding with preclustering turned off.",
             file=sys.stderr,
         )
         precluster_queries = False
@@ -143,11 +154,8 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
     if resume:
         nextflow_cmd.append("-resume")
 
-    if config:
-        nextflow_cmd.append(f"-c {config}")
-
     if nf_args:
-        nextflow_cmd.append(nf_args)
+        nextflow_cmd.extend(shlex.split(nf_args))
 
     #run the command
     print(f"Executing: {' '.join(nextflow_cmd)}")
@@ -161,6 +169,7 @@ def run_blitsfr_pipeline(version, reference, method, queries, metadata, output,
         sys.exit(1)
 
 def setup_common_arguments(parser):
+    """Setup the arguments to a mode-specific subparser."""
     parser.add_argument("-r", "--reference", required=True, 
                         help="Reference sequence file in GenBank format")
     parser.add_argument("-m", "--metadata", default="false", 
@@ -175,16 +184,15 @@ def setup_common_arguments(parser):
     # Nextflow-specific options
     parser.add_argument("--resume", action="store_true", 
                         help="Resume previous run (Nextflow -resume flag)")
-    parser.add_argument("-c", "--config", default=None, 
-                        help="Nextflow configuration file to use")
     parser.add_argument("--nf-args", default="", 
-                        help="Additional arguments to pass to Nextflow (as a quoted string)")
+                        help="Additional arguments to pass to Nextflow (as a quoted string), for example: \"-c custom.config -with-report report.html\"")
 
 def main():
+    """Parse args and launch nextflow for the selected mode."""
     parser = argparse.ArgumentParser(
         prog="blitsfr",
         description="BLITSFR can be run on assemblies or reads mode. Try: blitsfr assemblies -h or blitsfr reads -h",
-        epilog="BLITSFR: BLAST Interactive Tracks in a Single File Report. By Budi Permana (nalar.bp@gmail.com)",
+        epilog="BLITSFR: BLAST Interactive Tracks in a Single File Report.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -212,9 +220,9 @@ def main():
     blast_parser.add_argument("--blast-filter-min-alignment", type=float, default=200, 
                         help="Minimum alignment length (in bp) for FILTERING step on BLAST results for CGView")
     blast_parser.add_argument("--precluster_queries", action="store_true",
-                            help="Under development. Intended to enable skani-based preclustering of assembly queries before report decomposition. Currently disabled internally and defaults to false.")
+                            help="Reserved for future preclustering support. Currently unavailable and defaults to false.")
     blast_parser.add_argument("--precluster_queries_args", default="",
-                            help="Under development. Additional arguments for query preclustering. Currently ignored because preclustering is disabled internally.")
+                            help="Reserved for future preclustering support. Currently ignored.")
     
     setup_common_arguments(blast_parser)
     
@@ -249,7 +257,6 @@ def main():
         'precluster_queries': getattr(args, 'precluster_queries', False),
         'precluster_queries_args': getattr(args, 'precluster_queries_args', ''),
         'resume': args.resume,
-        'config': args.config,
         'nf_args': args.nf_args,
         'queries': args.queries
     }

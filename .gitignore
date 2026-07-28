@@ -1,6 +1,7 @@
 work/
 *.nextflow*
 .DS_Store
+sample/.DS_Store
 *.egg-info/
 __pycache__/
 *.pyc

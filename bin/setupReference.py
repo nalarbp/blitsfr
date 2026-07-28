@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""
+Convert a GenBank reference into the FASTA and GFF3 files for downstream workflow steps e,g. makeblastdb, indexing.
+
+Last checked by: BP
+"""
 from Bio import SeqIO
 from Bio.Seq import UndefinedSequenceError
 import argparse
@@ -6,14 +11,17 @@ import sys
 import multiprocessing as mp
 
 def get_strand_symbol(strand):
+    """Get strand symbols."""
     return '+' if strand == 1 else '-' if strand == -1 else '.'
 
 def get_frame(feature):
+    """Get frame for CDS features."""
     if feature.type == 'CDS':
         return str(feature.location.start % 3)
     return '.'
 
 def format_attributes(feature):
+    """Build the GFF attributes."""
     attributes = []
     
     #ID is required - construct from locus_tag or gene
@@ -33,6 +41,7 @@ def format_attributes(feature):
     return ';'.join(attributes)
 
 def process_record(record):
+    """Extract sequence and attributes from selected GenBank feature record for ref. track annotation."""
     included_features = ["CDS", "tRNA", "rRNA", "ncRNA", "misc_feature", "mobile_element", "source"]
     record_features = []
     
@@ -66,6 +75,7 @@ def process_record(record):
         return None
 
 def setup_reference(ref_gbk, out_seqs, out_features, threads='max'):
+    """Convert GenBank reference input into FASTA and features outputs."""
     # Determine thread count
     if threads == 'max' or threads is None:
         n_cpus = max(1, mp.cpu_count() - 2)  # Reserve 2 CPUs for overhead
@@ -155,6 +165,7 @@ def setup_reference(ref_gbk, out_seqs, out_features, threads='max'):
         sys.exit(1)
 
 if __name__ == "__main__":
+    """Parse args and generate reference FASTA and GFF3 files."""
     parser = argparse.ArgumentParser(description="Convert GenBank to FASTA and GFF3 files with parallel processing")
     parser.add_argument("-r", "--ref_gbk", help="A GenBank reference file (.gb, .gbk)", required=True)
     parser.add_argument("-s", "--out_seqs", help="Output multi-FASTA file for sequences", default="ref.fna")

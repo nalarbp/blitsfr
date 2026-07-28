@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+Generate the final BLITSFR payload and inject it into the template.
+
+Combines CGView JSON, metadata if given, coverage summaries, and pipeline log
+into one payload that can be embedded into the final template report.
+
+Last checked by: BP
+"""
 import argparse
 import datetime
 from pathlib import Path
@@ -8,6 +16,7 @@ from scifrMutator import mutate_template_memory
 
 
 def trim_display_path(value):
+    """Trim absolute paths into shorter display paths."""
     trimmed = value.strip()
     if "/" not in trimmed and "\\" not in trimmed:
         return value
@@ -15,6 +24,7 @@ def trim_display_path(value):
 
 
 def sanitize_log_value(value):
+    """Recursively trim path-like values."""
     if isinstance(value, dict):
         return {key: sanitize_log_value(val) for key, val in value.items()}
     if isinstance(value, list):
@@ -28,6 +38,7 @@ def sanitize_log_value(value):
     return value
 
 def combine_data(cgview_json, metadata_tsv, coverage_tsv, log_json, pipeline_version):
+    """Build the embedded BLITSFR payload object."""
     #cgview
     cgview_data = 'NA'
     if cgview_json:
@@ -94,6 +105,7 @@ def combine_data(cgview_json, metadata_tsv, coverage_tsv, log_json, pipeline_ver
     return combined_data
 
 def generate_scifr(cgview_json, metadata_json, coverage_json, template_path, output_path, json_output_path, log_json, pipeline_version, save_intermediate):
+    """Build the final payload and write the mutated single-file report."""
     try:
         # Step 1: Combine data
         combined_data = combine_data(cgview_json, metadata_json, coverage_json, log_json, pipeline_version)
@@ -112,6 +124,7 @@ def generate_scifr(cgview_json, metadata_json, coverage_json, template_path, out
         raise
 
 if __name__ == "__main__":
+    """Parse CLI inputs and generate the final BLITSFR report."""
     parser = argparse.ArgumentParser(description="Generate SCIFR from JSONs")
     parser.add_argument("-c", "--cgview_json", help="CGview", required=True)
     parser.add_argument("-m", "--metadata", help="Metadata")

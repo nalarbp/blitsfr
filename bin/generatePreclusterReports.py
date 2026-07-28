@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+Draft for pre-clusetring steps
+
+Last checked by: BP on going dev
+"""
+
+
 import argparse
 import shutil
 import subprocess
