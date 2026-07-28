@@ -4,9 +4,7 @@ BLITSFR (BLAST Interactive Tracks in Single-File Report) is a Nextflow pipeline 
 ## Quick demo
 Start here for a fast look at what BLITSFR does:
 
-- [Short demo](media/blitsfr_short_demo.mp4)
-- [Installation demo](media/blitsfr_install.mp4)
-- [Run demo](media/blitsfr_run.mp4)
+![BLITSFR short demo](media/blitsfr_short_demo_12fps_sdr.gif)
 
 ## Example report
 Try and download example of interactive BLITSFR report file from [https://scifr.fordelab.com/blitsfr](https://scifr.fordelab.com/blitsfr) or [https://nalarbp.github.io/blitsfr](https://nalarbp.github.io/blitsfr)
@@ -20,6 +18,8 @@ Try and download example of interactive BLITSFR report file from [https://scifr.
 - **Resume capability**: Nextflow workflow resumption for interrupted runs
 
 ## Installation
+
+![BLITSFR installation demo](media/blitsfr_install.gif)
 
 ### Supported platforms
 - macOS
@@ -92,6 +92,9 @@ pip install -e . --force-reinstall
 ```
 
 ## Basic usage
+
+![BLITSFR run demo](media/blitsfr_run.gif)
+
 This repository contains example inputs in [sample/](sample/):
 - `sample/assemblies_mode/` for assembly-mode examples
 - `sample/reads_mode/` for read-mode examples
