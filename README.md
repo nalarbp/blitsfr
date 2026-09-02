@@ -2,7 +2,6 @@
 BLITSFR (BLAST Interactive Tracks in Single-File Report) is a Nextflow pipeline that compares the similarity of multiple sequences using BLAST or KMA and generates a single-file interactive report with circular genome visualisation.
 
 ## Quick demo
-Start here for a fast look at what BLITSFR does:
 
 ![BLITSFR short demo](media/blitsfr_short_demo_12fps_sdr.gif)
 
@@ -297,4 +296,4 @@ Additional documentation and troubleshooting notes will be expanded in the repos
 
 ---
 
-**Version**: v0.1.2 
+**Version**: v0.1.3 

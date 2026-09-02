@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "blitsfr"
-version = "0.1.2"
+version = "0.1.3"
 description = "BLAST Interactive Tracks in Single-File Report"
 authors = [{name = "Budi Permana", email = "nalar.bp@gmail.com"}]
 readme = "README.md"

@@ -197,7 +197,7 @@ def main():
     )
     
     #version
-    version = '0.1.2'
+    version = '0.1.3'
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {version}")
     
     #subparsers for modes
